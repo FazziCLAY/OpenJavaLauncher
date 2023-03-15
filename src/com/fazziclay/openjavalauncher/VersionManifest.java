@@ -5,13 +5,13 @@ import org.json.JSONObject;
 
 public class VersionManifest {
     private final JSONObject origin;
+    private final boolean isFresh;
     private final Latest latest;
-    private boolean isFresh;
 
     public VersionManifest(JSONObject origin, boolean isFresh) {
         this.origin = origin;
-        this.latest = new Latest(origin.getJSONObject("latest"));
         this.isFresh = isFresh;
+        this.latest = new Latest(origin.getJSONObject("latest"));
     }
 
     public Latest getLatest() {
