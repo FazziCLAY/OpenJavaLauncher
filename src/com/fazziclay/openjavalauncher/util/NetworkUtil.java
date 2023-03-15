@@ -1,9 +1,13 @@
 package com.fazziclay.openjavalauncher.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import com.fazziclay.javaneoutil.FileUtil;
+
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -45,6 +49,12 @@ public class NetworkUtil {
         int logKey = new Random().nextInt();
         if (logKey < 0) logKey *= -1;
         return logKey;
+    }
+
+    public static void downloadFile(File file, String url) throws IOException {
+        InputStream in = new URL(url).openStream();
+        FileUtil.setText(file, "");
+        Files.copy(in, Paths.get(file.toURI()), StandardCopyOption.REPLACE_EXISTING);
     }
 
     public interface LogInterface {

@@ -1,0 +1,16 @@
+{
+  "language_name": "Russian - Русский",
+  "operation.updateVersionManifest.title": "Загрузка списка версий",
+  "operation.updateVersionManifest.state.loadingLocalCache": "Локальный кеш",
+  "operation.updateVersionManifest.state.downloading": "Скачивание version_manifest_v2.json",
+  "operation.updateVersionManifest.state.savingToCache": "Сохранение в кэш",
+  "operation.updateVersionManifest.state.finished": "Завершено",
+  "operation.minecraftLaunch.title": "Запуск Minecraft %s",
+  "operation.minecraftLaunch.state.prepare": "Подготовка...",
+  "operation.minecraftLaunch.state.downloadingVersionInfo": "Скачивание информации о версии",
+  "operation.minecraftLaunch.state.downloadingVersionJar": "Скачивание .jar файла версии",
+  "operation.minecraftLaunch.state.downloadingLibrary": "Скачивание библиотеки '%s'",
+  "operation.minecraftLaunch.state.launched": "Запущен! PID: %s",
+  "operation.minecraftLaunch.state.finished": "%s Завершён с кодом %s",
+  "main.latestStatus": "Последние: [%s] Релиз: %s Снапшот %s"
+}

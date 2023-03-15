@@ -1,0 +1,16 @@
+{
+  "language_name": "English",
+  "operation.updateVersionManifest.title": "Loading versions list...",
+  "operation.updateVersionManifest.state.loadingLocalCache": "Local cache",
+  "operation.updateVersionManifest.state.downloading": "Downloading version_manifest_v2.json",
+  "operation.updateVersionManifest.state.savingToCache": "Saving to cache...",
+  "operation.updateVersionManifest.state.finished": "Finished",
+  "operation.minecraftLaunch.title": "Starting Minecraft %s",
+  "operation.minecraftLaunch.state.prepare": "Preparing...",
+  "operation.minecraftLaunch.state.downloadingVersionInfo": "Downloading version info",
+  "operation.minecraftLaunch.state.downloadingVersionJar": "Downloading version .jar file",
+  "operation.minecraftLaunch.state.downloadingLibrary": "Downloading library '%s'",
+  "operation.minecraftLaunch.state.launched": "Launched as %s PID",
+  "operation.minecraftLaunch.state.finished": "%s Finished as %s exit code",
+  "main.latestStatus": "Latest's: [%s] Release: %s Snapshot %s"
+}
