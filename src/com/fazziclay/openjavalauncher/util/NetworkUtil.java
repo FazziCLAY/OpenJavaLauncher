@@ -55,12 +55,6 @@ public class NetworkUtil {
         return logKey;
     }
 
-    public static void downloadFile(File file, String url) throws IOException {
-        InputStream in = new URL(url).openStream();
-        FileUtil.setText(file, "");
-        Files.copy(in, Paths.get(file.toURI()), StandardCopyOption.REPLACE_EXISTING);
-    }
-
     public static void downloadFile(File file, String urlString, ProgressInterface progressInterface) throws IOException {
         final int DEFAULT_BUFFER_SIZE = 4 * 1024;
         FileUtil.setText(file, "");

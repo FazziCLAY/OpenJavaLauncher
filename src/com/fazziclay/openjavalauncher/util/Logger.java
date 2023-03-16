@@ -9,4 +9,8 @@ public class Logger {
         System.err.printf("[%s] %s\n", tab, d);
         e.printStackTrace();
     }
+
+    public static void e(String tab, String d) {
+        System.err.printf("[%s] %s\n", tab, d);
+    }
 }

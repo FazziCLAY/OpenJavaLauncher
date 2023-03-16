@@ -5,12 +5,20 @@
   "operation.updateVersionManifest.state.downloading": "Скачивание version_manifest_v2.json",
   "operation.updateVersionManifest.state.savingToCache": "Сохранение в кэш",
   "operation.updateVersionManifest.state.finished": "Завершено",
-  "operation.minecraftLaunch.title": "Minecraft %s",
+  "operation.minecraftLaunch.title": "Minecraft %s (%s)",
   "operation.minecraftLaunch.state.prepare": "Подготовка...",
   "operation.minecraftLaunch.state.downloadingVersionInfo": "Скачивание информации о версии",
   "operation.minecraftLaunch.state.downloadingVersionJar": "Скачивание .jar файла версии",
   "operation.minecraftLaunch.state.downloadingLibrary": "Скачивание библиотеки '%s'",
   "operation.minecraftLaunch.state.launched": "Запущен! PID: %s",
   "operation.minecraftLaunch.state.finished": "%s Завершён с кодом %s",
-  "main.latestStatus": "Последнее: [%s] Релиз: %s Снапшот %s"
+  "main.latestStatus": "Последнее: [%s] Релиз: %s Снапшот %s",
+  "main.start": "Запуск!",
+  "currentOperations.title": "- Текущие операции -",
+  "currentOperations.operation.cancel": "Отмена",
+  "menu.file": "Файл",
+  "menu.file.language": "Язык",
+  "menu.profiles": "Профили",
+  "menu.profiles.addGameProfile": "Добавить игровой профиль",
+  "menu.profiles.addUserProfile": "Добавить профиль пользователя"
 }

@@ -1,4 +1,4 @@
-package com.fazziclay.openjavalauncher.launcher;
+package com.fazziclay.openjavalauncher.launcher.launch;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -11,8 +11,9 @@ public class RulesParser {
     }
 
     public static boolean isRuleAllow(JSONArray rules, JSONObject features) {
-        boolean b = true;
         if (rules == null) return true;
+        if (features == null) features = new JSONObject();
+        boolean b = true;
         for (Object r : rules) {
             JSONObject rule = (JSONObject) r;
             String action = rule.getString("action");

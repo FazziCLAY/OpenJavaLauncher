@@ -1,9 +1,11 @@
 package com.fazziclay.openjavalauncher.gui;
 
 import com.fazziclay.openjavalauncher.OpenJavaLauncher;
+import com.fazziclay.openjavalauncher.launcher.GameProfile;
+import com.fazziclay.openjavalauncher.launcher.UserProfile;
 import com.fazziclay.openjavalauncher.launcher.VersionManifest;
 import com.fazziclay.openjavalauncher.operation.Operation;
-import com.fazziclay.openjavalauncher.util.JScrollPopupMenu;
+import com.fazziclay.openjavalauncher.util.Lang;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +14,7 @@ import java.util.List;
 import static com.fazziclay.openjavalauncher.util.Lang.t;
 
 public class LauncherWindow {
-    private static final String WINDOW_TITLE = "OpenJavaLauncher";
+    private static final String WINDOW_TITLE = "OpenJavaLauncher v" + OpenJavaLauncher.VERSION_NAME + " ("+OpenJavaLauncher.VERSION_BUILD+")";
     private static final Color BACKGROUND_COLOR = Color.BLACK;
 
 
@@ -21,8 +23,10 @@ public class LauncherWindow {
     private DefaultListModel<String> pop;
     private OpenJavaLauncher.WindowListener windowListener;
     private JPanel operations;
-    private Dimension start;
+    private final Dimension start;
     private boolean created = false;
+    private JPanel root;
+    private MainComponent mainComponent;
 
     public LauncherWindow(int startHeight, int startWidth) {
         start = new Dimension(startWidth, startHeight);
@@ -49,63 +53,184 @@ public class LauncherWindow {
 
     private void setupLayout() {
         setupMenuBar();
+
         latest = new JLabel(t("main.latestStatus", "?", "?.?", "??w??a"));
         latest.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
         latest.setForeground(Color.WHITE);
+        frame.getContentPane().add(BorderLayout.SOUTH, latest);
 
         operations = new JPanel();
         operations.setBackground(Color.gray);
         operations.setLayout(new BoxLayout(operations, BoxLayout.Y_AXIS));
-        frame.getContentPane().add(BorderLayout.SOUTH, latest);
         frame.getContentPane().add(BorderLayout.EAST, operations);
 
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setBackground(Color.RED);
-        frame.getContentPane().add(p);
 
-        JButton userProfile = new JButton("User Profile: "+windowListener.getCurrentUserProfile());
-        JButton gameProfile = new JButton("Game Profile: "+windowListener.getCurrentGameProfile());
-        JButton start = new JButton("Start!");
-        userProfile.addActionListener(e -> {
-            PopupFactory f = new PopupFactory();
-            DefaultListModel<String> listModel = new DefaultListModel<>();
-            for (int i = 0; i < 1111; i++) {
-                listModel.addElement("OwO " + i);
+        mainComponent = new MainComponent();
+        root = new JPanel();
+        root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
+        root.add(mainComponent);
+        frame.getContentPane().add(root);
+    }
+
+    private void setScreen(JComponent c) {
+        root.removeAll();
+        root.add(c);
+    }
+
+    public void languageChanged() {
+        frame.repaint();
+    }
+
+    private class MainComponent extends JPanel {
+        public MainComponent() {
+            setLayout(new GridBagLayout());
+
+            JComboBox<String> userProfile = new JComboBox<>();
+            userProfile.setModel(new UserProfileModel(userProfile, windowListener.getSelectedUserProfile()));
+            userProfile.setPreferredSize(new Dimension(150, 30));
+
+            JComboBox<String> gameProfile = new JComboBox<>();
+            gameProfile.setModel(new GameProfileModel(gameProfile, windowListener.getSelectedGameProfile()));
+            gameProfile.setPreferredSize(new Dimension(150, 30));
+
+
+            JButton start = new JButton(t("main.start"));
+            start.addActionListener(e -> windowListener.startClicked());
+
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 0;
+            c.gridwidth = 5;
+            c.gridheight = 2;
+            add(userProfile, c);
+
+            c.gridx = 0;
+            c.gridy = 5;
+            c.gridwidth = 5;
+            c.gridheight = 2;
+            add(gameProfile, c);
+
+            c.gridx = 0;
+            c.gridy = 7;
+            c.gridwidth = 10;
+            c.gridheight = 2;
+            add(start, c);
+        }
+
+        private class GameProfileModel extends AbstractListModel<String> implements ComboBoxModel<String> {
+            private final JComboBox<String> comboBox;
+            private String selected;
+
+            public GameProfileModel(JComboBox<String> comboBox, GameProfile gameProfile) {
+                this.comboBox = comboBox;
+                selected = gameProfile == null ? null : gameProfile.getName();
             }
-            Popup popup = f.getPopup(frame, new JScrollPane(new JList<>(listModel)), userProfile.getX(), userProfile.getY());
-            popup.show();
-        });
-        gameProfile.addActionListener(e -> {
 
-        });
-        start.addActionListener(e -> windowListener.startClicked());
-        p.add(userProfile);
-        p.add(gameProfile);
-        p.add(start);
+            @Override
+            public void setSelectedItem(Object anItem) {
+                this.selected = (String) anItem;
+                GameProfile selected = windowListener.getGameProfiles()[comboBox.getSelectedIndex()];
+                windowListener.selectGameProfile(selected);
+            }
+
+            @Override
+            public Object getSelectedItem() {
+                return selected;
+            }
+
+            @Override
+            public int getSize() {
+                return windowListener.getGameProfiles().length;
+            }
+
+            @Override
+            public String getElementAt(int index) {
+                return windowListener.getGameProfiles()[index].getName();
+            }
+        }
+
+        private class UserProfileModel extends AbstractListModel<String> implements ComboBoxModel<String> {
+            private final JComboBox<String> comboBox;
+            private String selected;
+
+            public UserProfileModel(JComboBox<String> comboBox, UserProfile userProfile) {
+                this.comboBox = comboBox;
+                selected = userProfile == null ? null : userProfile.getName();
+            }
+
+            @Override
+            public void setSelectedItem(Object anItem) {
+                this.selected = (String) anItem;
+                UserProfile selected = windowListener.getUserProfiles()[comboBox.getSelectedIndex()];
+                windowListener.selectUserProfile(selected);
+            }
+
+            @Override
+            public Object getSelectedItem() {
+                return selected;
+            }
+
+            @Override
+            public int getSize() {
+                return windowListener.getUserProfiles().length;
+            }
+
+            @Override
+            public String getElementAt(int index) {
+                return windowListener.getUserProfiles()[index].getName();
+            }
+        }
+    }
+
+
+    public void updateUserProfiles() {
+
+    }
+
+    public void updateGameProfiles() {
+
     }
 
     private void setupMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
         // File
-        JMenu menuFile = new JMenu("File");
-        JMenuItem m11 = new JMenuItem("Open");
-        m11.addActionListener(e -> windowListener.fileOpenClicked());
-        JMenuItem m22 = new JMenuItem("Save as...");
-        menuFile.add(m11);
-        menuFile.add(m22);
+        JMenu menuFile = new JMenu(t("menu.file"));
+        JMenuItem settings = new JMenuItem(t("menu.file.language"));
+        menuFile.add(settings);
+
+        settings.addActionListener(e -> {
+            ButtonGroup group = new ButtonGroup();
+            JFrame f = new JFrame();
+            f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            JPanel panel = new JPanel();
+            f.getContentPane().add(panel);
+
+            for (String language : Lang.getLanguages()) {
+                try {
+                    JRadioButton b = new JRadioButton(Lang.getLanguageName(language));
+                    group.add(b);
+                    panel.add(b);
+                    b.addActionListener(ee -> windowListener.selectLanguage(language));
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+
+            f.setType(Window.Type.NORMAL);
+            f.setBounds(frame.getX(), frame.getY(), 150, 150);
+            f.setVisible(true);
+            f.revalidate();
+        });
 
 
-        JMenu menuProfiles = new JMenu("Profiles");
-        JMenuItem addGame = new JMenuItem("Add Game Profile");
+        JMenu menuProfiles = new JMenu(t("menu.profiles"));
+        JMenuItem addGame = new JMenuItem(t("menu.profiles.addGameProfile"));
         addGame.addActionListener(e -> windowListener.addGameProfileClicked());
-        JMenuItem addUser = new JMenuItem("Add User Profile");
+        JMenuItem addUser = new JMenuItem(t("menu.profiles.addUserProfile"));
         addUser.addActionListener(e -> windowListener.addUserProfileClicked());
         menuProfiles.add(addGame);
         menuProfiles.add(addUser);
-
-        JMenu menuHelp = new JMenu("Help");
 
 
         JMenu menuDebug = new JMenu("DEBUG");
@@ -114,32 +239,30 @@ public class LauncherWindow {
         menuDebug.add(addFakeOperation);
 
         JMenuItem clearOperations = new JMenuItem("Clear operations");
-        clearOperations.addActionListener(e -> windowListener.clearOperations());
+        clearOperations.addActionListener(e -> windowListener.clearOperationsClicked());
         menuDebug.add(clearOperations);
 
         JMenuItem updateVersionManifest = new JMenuItem("Update version_manifest_v2.json");
-        updateVersionManifest.addActionListener(e -> windowListener.updateVersionManifest());
+        updateVersionManifest.addActionListener(e -> windowListener.updateVersionManifestClicked());
         menuDebug.add(updateVersionManifest);
+
+
 
         menuBar.add(menuFile);
         menuBar.add(menuProfiles);
-        menuBar.add(menuHelp);
         menuBar.add(menuDebug);
-        frame.getContentPane().add(BorderLayout.NORTH, menuBar);
+        frame.setJMenuBar(menuBar);
     }
 
 
     public void updateVersionManifest(VersionManifest manifest) {
         if (manifest == null) return;
         latest.setText(t("main.latestStatus", manifest.isFresh() ? "*" : " ", manifest.getLatest().getRelease(), manifest.getLatest().getSnapshot()));
-        for (VersionManifest.Version version : manifest.getVersions()) {
-
-        }
     }
 
     public void updateOperations(List<Operation> operations) {
         this.operations.removeAll();
-        JLabel t = new JLabel(" ~ Current operations ~ ");
+        JLabel t = new JLabel(t("currentOperations.title"));
         t.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 21));
         this.operations.add(t);
         for (Operation operation : operations) {
@@ -156,7 +279,7 @@ public class LauncherWindow {
             p.add(desc);
 
             if (operation.isCancelable()) {
-                JButton cancel = new JButton("Cancel");
+                JButton cancel = new JButton(t("currentOperations.operation.cancel"));
                 cancel.addActionListener(e -> operation.cancel());
                 p.add(cancel);
             }

@@ -68,7 +68,7 @@ public class ConfigurationManager {
         while (i < json.length()) {
             JSONObject profile = json.getJSONObject(i);
 
-            ret.add(new GameProfile(UUID.fromString(profile.getString("profileUUID")), profile.getString("versionId"), profile.getString("jvmArguments"), new File(profile.getString("gameDirectory")), profile.optInt("windowWidth", 0), profile.optInt("windowHeight", 0)));
+            ret.add(new GameProfile(UUID.fromString(profile.getString("profileUUID")), profile.optString("name", "name"), profile.getString("versionId"), profile.optString("jvmPath", "java"), profile.getString("jvmArguments"), new File(profile.getString("gameDirectory")), profile.optInt("windowWidth", 0), profile.optInt("windowHeight", 0), profile.optBoolean("downloadMissingAssets", true)));
             i++;
         }
 
@@ -79,12 +79,15 @@ public class ConfigurationManager {
         final JSONArray ret = new JSONArray();
         for (GameProfile gameProfile : gameProfileList) {
             ret.put(new JSONObject()
+                    .put("name", gameProfile.getName())
                     .put("profileUUID", gameProfile.getProfileUUID().toString())
                     .put("versionId", gameProfile.getVersionId())
                     .put("jvmArguments", gameProfile.getJVMArguments())
                     .put("gameDirectory", gameProfile.getGameDirectory().getAbsolutePath())
                     .put("windowWidth", gameProfile.getWindowWidth())
                     .put("windowHeight", gameProfile.getWindowHeight())
+                    .put("downloadMissingAssets", gameProfile.isDownloadMissingAssets())
+                    .put("jvmPath", gameProfile.getJVMPath())
             );
         }
         return ret;
@@ -98,7 +101,7 @@ public class ConfigurationManager {
         while (i < json.length()) {
             JSONObject profile = json.getJSONObject(i);
 
-            ret.add(new UserProfile(UUID.fromString(profile.getString("profileUUID")), profile.getString("nickname"), profile.getString("uuid"), profile.optBoolean("isDemo")));
+            ret.add(new UserProfile(UUID.fromString(profile.getString("profileUUID")), profile.optString("name", "name"), profile.getString("nickname"), profile.getString("uuid"), profile.optBoolean("isDemo")));
             i++;
         }
 
@@ -110,6 +113,7 @@ public class ConfigurationManager {
 
         for (UserProfile userProfile : userProfileList) {
             ret.put(new JSONObject()
+                    .put("name", userProfile.getName())
                     .put("profileUUID", userProfile.getProfileUUID().toString())
                     .put("nickname", userProfile.getNickname())
                     .put("isDemo", userProfile.isDemo())
@@ -163,15 +167,27 @@ public class ConfigurationManager {
         return getUserProfile(selectedUserProfile);
     }
 
-    public void setSelectedUserProfile(UserProfile selectedUserProfile) {
-        this.selectedUserProfile = selectedUserProfile.getProfileUUID();
+    public void setSelectedUserProfile(UserProfile profile) {
+        this.selectedUserProfile = profile.getProfileUUID();
     }
 
     public GameProfile getSelectedGameProfile() {
         return getGameProfile(selectedGameProfile);
     }
 
-    public void setSelectedGameProfile(GameProfile selectedGameProfile) {
-        this.selectedGameProfile = selectedGameProfile.getProfileUUID();
+    public void setSelectedGameProfile(GameProfile profile) {
+        this.selectedGameProfile = profile.getProfileUUID();
+    }
+
+    public void addUserProfile(UserProfile profile) {
+        boolean select = userProfileList.isEmpty();
+        userProfileList.add(profile);
+        if (select) setSelectedUserProfile(profile);
+    }
+
+    public void addGameProfile(GameProfile profile) {
+        boolean select = gameProfileList.isEmpty();
+        gameProfileList.add(profile);
+        if (select) setSelectedGameProfile(profile);
     }
 }
