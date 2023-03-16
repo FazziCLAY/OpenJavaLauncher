@@ -2,38 +2,48 @@ package com.fazziclay.openjavalauncher;
 
 import com.fazziclay.javaneoutil.FileUtil;
 import com.fazziclay.openjavalauncher.datafixer.DataFixer;
+import com.fazziclay.openjavalauncher.gui.LauncherWindow;
+import com.fazziclay.openjavalauncher.launcher.ConfigurationManager;
+import com.fazziclay.openjavalauncher.launcher.GameProfile;
+import com.fazziclay.openjavalauncher.launcher.UserProfile;
+import com.fazziclay.openjavalauncher.launcher.VersionManifest;
 import com.fazziclay.openjavalauncher.operation.MinecraftLaunchOperation;
 import com.fazziclay.openjavalauncher.operation.Operation;
 import com.fazziclay.openjavalauncher.operation.UpdateVersionManifestOperation;
 import com.fazziclay.openjavalauncher.util.Lang;
 import com.fazziclay.openjavalauncher.util.Logger;
 import com.fazziclay.openjavalauncher.util.NetworkUtil;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import static com.fazziclay.openjavalauncher.util.Lang.t;
 
 public class OpenJavaLauncher {
     private static final String VERSION_MANIFEST_V2_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
     private static final String TAG = "OpenJavaLauncher";
+    private static final String DEFAULT_JVM_ARGUMENTS = "-Xmx2048M -Xms2048M -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dfile.encoding=UTF-8";
+    private static volatile OpenJavaLauncher instance;
 
     public static void main(String[] args) {
         final String MAIN_TAG = "main";
 
         Logger.d(MAIN_TAG, "Hello!");
         Logger.d(MAIN_TAG, "OpenJavaLauncher created by: FazziCLAY");
-        final OpenJavaLauncher launcher = new OpenJavaLauncher(args);
-        int exit = launcher.run();
+        instance = new OpenJavaLauncher(args);
+        int exit = instance.run();
         Logger.d(MAIN_TAG, "OpenJavaLauncher exit with " + exit + " code!");
         Logger.d(MAIN_TAG, "Good Bye!");
         System.exit(exit);
+    }
+
+    public static OpenJavaLauncher getInstance() {
+        return instance;
     }
 
 
@@ -125,108 +135,20 @@ public class OpenJavaLauncher {
         thread.start();
     }
 
-
     private void updateVersionManifest(VersionManifest manifest) {
         SwingUtilities.invokeLater(() -> window.updateVersionManifest(manifest));
     }
 
+    public VersionManifest getVersionManifest() {
+        return versionManifest;
+    }
+
     private void startMinecraft(final GameProfile gameProfile, final UserProfile userProfile) {
         Thread thread = new Thread(() -> {
-            final VersionManifest.Version version = versionManifest.getVersionById(gameProfile.getId());
-            if (version == null) throw new RuntimeException("Version '"+gameProfile.getId()+"' not found");
-            final MinecraftLaunchOperation operation = new MinecraftLaunchOperation(version);
+            final MinecraftLaunchOperation operation = new MinecraftLaunchOperation(gameProfile, userProfile);
             addOperation(operation);
-            try {
-                operation.setState(t("operation.minecraftLaunch.state.prepare"));
-                File versionDir = new File(versionsDir, version.getId());
-                File versionJsonFile = new File(versionDir, version.getId() + ".json");
-                File versionJar = new File(versionDir, version.getId() + ".jar");
-
-                JSONObject versionJson;
-                if (FileUtil.isExist(versionJsonFile)) {
-                    versionJson = new JSONObject(FileUtil.getText(versionJsonFile));
-                } else {
-                    operation.setState(t("operation.minecraftLaunch.state.downloadingVersionInfo"));
-
-                    String parsed = NetworkUtil.parseTextPage(version.getUrl());
-                    FileUtil.setText(versionJsonFile, parsed);
-                    versionJson = new JSONObject(parsed);
-                }
-
-                if (!FileUtil.isExist(versionJar)) {
-                    operation.setState(t("operation.minecraftLaunch.state.downloadingVersionJar"));
-
-                    NetworkUtil.downloadFile(versionJar, versionJson.getJSONObject("downloads").getJSONObject("client").getString("url"));
-                }
-
-                List<File> resultLibs = new ArrayList<>();
-                JSONArray libs = versionJson.getJSONArray("libraries");
-                int i = 0;
-                while (i < libs.length()) {
-                    JSONObject lib = libs.getJSONObject(i);
-                    String libName = lib.getString("name");
-                    System.out.println("Lib " + libName);
-                    JSONArray rules = lib.optJSONArray("rules");
-                    JSONObject downloads = lib.getJSONObject("downloads");
-                    JSONObject dArtefact;
-                    try {
-                        dArtefact = downloads.getJSONObject("artifact");
-                    } catch (Exception e) {
-                        Logger.e("w", lib.toString(2), e);
-                        throw new RuntimeException(e);
-                    }
-                    File path = new File(librariesDir, dArtefact.getString("path"));
-                    if (!FileUtil.isExist(path)) {
-                        operation.setState(t("operation.minecraftLaunch.state.downloadingLibrary", libName));
-
-                        NetworkUtil.downloadFile(path, dArtefact.getString("url"));
-                    }
-                    resultLibs.add(path);
-                    i++;
-                }
-
-
-                resultLibs.add(versionJar);
-
-                String jvm = "-XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Xmx2048M -Xms2048M -Dfile.encoding=UTF-8 -Xss1M -Dminecraft.launcher.brand=java-minecraft-launcher -Dminecraft.launcher.version=1.6.84-j";
-                String classpath = "";
-                for (File resultLib : resultLibs) {
-                    classpath = classpath + resultLib.getAbsolutePath() + ":";
-                }
-                classpath = classpath.substring(0, classpath.length() - 1);
-                String mainClass = versionJson.getString("mainClass");
-                String gameArguments = "--username fazzitl --version OptiFine 1.19.2 --gameDir /home/l/Minecraft --assetsDir /home/l/Minecraft/assets --assetIndex 1.19 --uuid 750494a191733fd79336798470bf2dd8 --accessToken 750494a191733fd79336798470bf2dd8 --clientId  --xuid  --userType legacy --versionType modified --width 925 --height 530 --server localhost --port 25565";
-
-
-                List<String> list = new ArrayList<>();
-                list.add("/usr/lib/jvm/java-17-openjdk-amd64/bin/java");
-                list.addAll(Arrays.asList(jvm.split(" ")));
-                list.add("-cp");
-                list.add(classpath);
-                list.add(mainClass);
-                list.addAll(Arrays.asList(gameArguments.split(" ")));
-
-                List<String> temp = new ArrayList<>();
-                temp.add("java");
-                temp.add("-cp");
-                temp.add(versionJar.getAbsolutePath());
-                temp.add("net.minecraft.client.main.Main");
-
-                System.out.println("ARGS " + list);
-
-                operation.setState("Launching!");
-                ProcessBuilder processBuilder = new ProcessBuilder(list);
-
-                Process process = processBuilder.start();
-                operation.setProcess(process);
-                operation.setState(t("operation.minecraftLaunch.state.launched", process.pid()));
-                int exitCode = process.waitFor();
-
-                operation.setState(t("operation.minecraftLaunch.state.finished", version.getId(), exitCode));
-                removeOperation(operation);
-            } catch (Exception e) {
-                Logger.e("MinecraftThread", "Exception", e);
-            }
+            operation.run(versionsDir, librariesDir);
+            removeOperation(operation);
         });
         thread.setName("MinecraftThread");
         thread.start();
@@ -243,7 +165,6 @@ public class OpenJavaLauncher {
     public class WindowListener {
 
         public void fileOpenClicked() {
-            JOptionPane.showConfirmDialog(null, "File");
         }
 
         public void addFakeOperationClicked() {
@@ -281,15 +202,33 @@ public class OpenJavaLauncher {
         }
 
         public String getCurrentUserProfile() {
-            return configurationManager.getSelectedUserProfile().getNickname();
+            try {
+                return configurationManager.getSelectedUserProfile().getNickname();
+            } catch (Exception e) {
+                return "Unknown";
+            }
         }
 
         public String getCurrentGameProfile() {
-            return configurationManager.getSelectedGameProfile().getId();
+            try {
+                return configurationManager.getSelectedGameProfile().getVersionId();
+            } catch (Exception e) {
+                return "Unknown";
+            }
         }
 
         public void startClicked() {
             startMinecraft(configurationManager.getSelectedGameProfile(), configurationManager.getSelectedUserProfile());
+        }
+
+        public void addUserProfileClicked() {
+            configurationManager.getUserProfileList().add(new UserProfile(UUID.randomUUID(), "Nickname", UUID.randomUUID().toString().replace("-", ""), false));
+            configurationManager.save();
+        }
+
+        public void addGameProfileClicked() {
+            configurationManager.getGameProfileList().add(new GameProfile(UUID.randomUUID(), versionManifest.getLatest().getRelease(), DEFAULT_JVM_ARGUMENTS, new File(launcherDir, "gameDirectory"), 0, 0));
+            configurationManager.save();
         }
     }
 }

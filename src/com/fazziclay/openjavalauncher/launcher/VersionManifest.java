@@ -1,4 +1,4 @@
-package com.fazziclay.openjavalauncher;
+package com.fazziclay.openjavalauncher.launcher;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -1,12 +1,12 @@
-package com.fazziclay.openjavalauncher;
+package com.fazziclay.openjavalauncher.gui;
 
+import com.fazziclay.openjavalauncher.OpenJavaLauncher;
+import com.fazziclay.openjavalauncher.launcher.VersionManifest;
 import com.fazziclay.openjavalauncher.operation.Operation;
 import com.fazziclay.openjavalauncher.util.JScrollPopupMenu;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 import static com.fazziclay.openjavalauncher.util.Lang.t;
@@ -18,7 +18,7 @@ public class LauncherWindow {
 
     private JFrame frame;
     private JLabel latest;
-    private JScrollPopupMenu pop;
+    private DefaultListModel<String> pop;
     private OpenJavaLauncher.WindowListener windowListener;
     private JPanel operations;
     private Dimension start;
@@ -67,6 +67,18 @@ public class LauncherWindow {
         JButton userProfile = new JButton("User Profile: "+windowListener.getCurrentUserProfile());
         JButton gameProfile = new JButton("Game Profile: "+windowListener.getCurrentGameProfile());
         JButton start = new JButton("Start!");
+        userProfile.addActionListener(e -> {
+            PopupFactory f = new PopupFactory();
+            DefaultListModel<String> listModel = new DefaultListModel<>();
+            for (int i = 0; i < 1111; i++) {
+                listModel.addElement("OwO " + i);
+            }
+            Popup popup = f.getPopup(frame, new JScrollPane(new JList<>(listModel)), userProfile.getX(), userProfile.getY());
+            popup.show();
+        });
+        gameProfile.addActionListener(e -> {
+
+        });
         start.addActionListener(e -> windowListener.startClicked());
         p.add(userProfile);
         p.add(gameProfile);
@@ -83,6 +95,15 @@ public class LauncherWindow {
         JMenuItem m22 = new JMenuItem("Save as...");
         menuFile.add(m11);
         menuFile.add(m22);
+
+
+        JMenu menuProfiles = new JMenu("Profiles");
+        JMenuItem addGame = new JMenuItem("Add Game Profile");
+        addGame.addActionListener(e -> windowListener.addGameProfileClicked());
+        JMenuItem addUser = new JMenuItem("Add User Profile");
+        addUser.addActionListener(e -> windowListener.addUserProfileClicked());
+        menuProfiles.add(addGame);
+        menuProfiles.add(addUser);
 
         JMenu menuHelp = new JMenu("Help");
 
@@ -101,6 +122,7 @@ public class LauncherWindow {
         menuDebug.add(updateVersionManifest);
 
         menuBar.add(menuFile);
+        menuBar.add(menuProfiles);
         menuBar.add(menuHelp);
         menuBar.add(menuDebug);
         frame.getContentPane().add(BorderLayout.NORTH, menuBar);
@@ -110,9 +132,8 @@ public class LauncherWindow {
     public void updateVersionManifest(VersionManifest manifest) {
         if (manifest == null) return;
         latest.setText(t("main.latestStatus", manifest.isFresh() ? "*" : " ", manifest.getLatest().getRelease(), manifest.getLatest().getSnapshot()));
-        pop = new JScrollPopupMenu("Versions");
         for (VersionManifest.Version version : manifest.getVersions()) {
-            pop.add(new JMenuItem(version.getId()));
+
         }
     }
 
