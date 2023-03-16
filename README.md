@@ -1,8 +1,17 @@
 # OpenJavaLauncher
 Open-source java minecraft launcher (pro)
 
+Launcher for (linuxoids) those who just want to run minecraft, and not download the launcher for 100 years
+
 # Help me with the GUI
 I don't know how to make beautiful graphical interfaces. If you want to help, make a fork and pullrequest
+
+# NO PIRACY
+The launcher does not have an online account login system, but this does not mean that you need to use it.
+
+**I FORBID YOU TO RUN MINECRAFT THROUGH IT UNLESS YOU HAVE PURCHASED AN OFFICIAL LICENSE FOR THE GAME!**
+
+My license - [NameMC: FazziCLAY](https://namemc.com/profile/fazziCLAY.2)
 
 # Screenshots
 ![2023-03-16_17-44](https://user-images.githubusercontent.com/68351787/225690699-fac9974a-91fa-4aaf-a81a-376bdea5ace6.png)
